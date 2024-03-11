@@ -10,5 +10,6 @@ RUN apk add --no-cache openssl-dev musl-dev linux-headers
 ENV OPENSSL_DIR=/usr
 
 RUN rustup default nightly
-RUN cargo build --release
-RUN ./target/release/facade-service
+RUN cargo build
+
+CMD ["cargo", "run"]
