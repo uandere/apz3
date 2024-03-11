@@ -1,0 +1,59 @@
+version: '3.8'
+services:
+  facade-service:
+    build: ./facade-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - logging-service-1
+      - logging-service-2
+      - logging-service-3
+
+  logging-service-1:
+    build: ./logging-service
+    ports:
+      - "8001:8001"
+    environment:
+      - ROCKET_PORT=8001
+    depends_on:
+      - logging-redis-1
+
+  logging-service-2:
+    build: ./logging-service
+    ports:
+      - "8002:8002"
+    environment:
+      - ROCKET_PORT=8002
+    depends_on:
+      - logging-redis-2
+
+  logging-service-3:
+    build: ./logging-service
+    ports:
+      - "8003:8003"
+    environment:
+      - ROCKET_PORT=8003
+    depends_on:
+      - logging-redis-3
+
+  logging-redis-1:
+    image: "redis:alpine"
+    ports:
+      - "6379"
+
+  logging-redis-2:
+    image: "redis:alpine"
+    ports:
+      - "6380"
+
+  logging-redis-3:
+    image: "redis:alpine"
+    ports:
+      - "6381"
+
+  messages-service:
+    build: ./messages-service
+    ports:
+      - "8004:8004"
+    environment:
+      - ROCKET_PORT=8004
