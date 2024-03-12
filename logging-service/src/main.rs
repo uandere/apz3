@@ -1,9 +1,10 @@
 use rocket::{http::Status, post, serde::json::Json, routes, launch};
 use rocket::response::status;
-use redis::{Commands};
+use redis::Commands;
+use serde::{Deserialize, Serialize};
 use std::env;
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct LoggedMessage {
     uuid: String,
     msg: String,
@@ -11,7 +12,9 @@ struct LoggedMessage {
 
 #[post("/log", format = "json", data = "<message>")]
 fn log_message(message: Json<LoggedMessage>) -> Result<status::Custom<Json<LoggedMessage>>, status::Custom<String>> {
-    let client = match redis::Client::open("redis://logging-redis:6379/") {
+    let redis_url = env::var("REDIS_URL").expect("REDIS_URL must be set");
+
+    let client = match redis::Client::open(redis_url) {
         Ok(client) => client,
         Err(_) => return Err(status::Custom(Status::InternalServerError, "Failed to connect to Redis".into())),
     };

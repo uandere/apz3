@@ -24,7 +24,7 @@ struct AppState {
 async fn index_post(message: Json<Message>, state: &State<AppState>) -> Result<String, status::Custom<String>> {
     let selected_port = {
         let mut rng = state.rng.lock().unwrap();
-        let ports = vec![8001, 8002, 8003];
+        let ports = [8001, 8002, 8003];
         // Select a port and immediately release the lock by limiting the scope
         ports[rng.gen_range(0..ports.len())]
     };
@@ -52,7 +52,7 @@ async fn index_post(message: Json<Message>, state: &State<AppState>) -> Result<S
 async fn index_get(state: &State<AppState>) -> Result<String, status::Custom<String>> {
     let selected_port = {
         let mut rng = state.rng.lock().unwrap();
-        let ports = vec![8001, 8002, 8003];
+        let ports = [8001, 8002, 8003];
         // Select a port and immediately release the lock by limiting the scope
         ports[rng.gen_range(0..ports.len())]
     };
