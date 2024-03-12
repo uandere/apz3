@@ -1,19 +1,24 @@
-FROM rust:1.75.0-alpine3.19 as builder
-RUN apk update && apk upgrade
-RUN apk add pkgconfig openssl openssl-dev musl-dev gcc
-
+# Build stage with Debian
+FROM rust:1.75.0-buster as builder
+RUN apt-get update && apt-get upgrade -y
 WORKDIR /usr/src/app
-COPY .. .
-RUN rustup target add x86_64-unknown-linux-musl
+COPY . .
+RUN cargo build --release
 
-RUN export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
-RUN export CC=aarch64-linux-gnu-gcc
-RUN cargo build -p prqlc --release --target=aarch64-unknown-linux-musl
-
-RUN cargo build --target x86_64-unknown-linux-musl --release
-
-FROM rust:alpine3.19 as facade-service
-RUN apk update && apk upgrade
-RUN apk add pkgconfig openssl openssl-dev musl-dev gcc
-COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-musl/release/facade-service /usr/local/bin/facade-service
+FROM rust:1.75.0-buster as facade-service
+# WORKDIR /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/facade-service /usr/local/bin/facade-service
+# Define the binary as the entrypoint
 CMD ["facade-service"]
+
+FROM rust:1.75.0-buster as logging-service
+# WORKDIR /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/logging-service /usr/local/bin/logging-service
+# Define the binary as the entrypoint
+CMD ["logging-service"]
+
+FROM rust:1.75.0-buster as messages-service
+# WORKDIR /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/messages-service /usr/local/bin/messages-service
+# Define the binary as the entrypoint
+CMD ["messages-service"]
