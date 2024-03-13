@@ -22,6 +22,7 @@ services:
       - ROCKET_PORT=8001
       - ROCKET_ADDRESS=0.0.0.0
       - REDIS_URL=redis://redis-1:6379
+      - RUST_LOG=info
     depends_on:
       - redis-1
   
@@ -41,6 +42,7 @@ services:
       - ROCKET_PORT=8001
       - ROCKET_ADDRESS=0.0.0.0
       - REDIS_URL=redis://redis-2:6379
+      - RUST_LOG=info
     depends_on:
       - redis-2
   
@@ -60,6 +62,7 @@ services:
       - ROCKET_PORT=8001
       - ROCKET_ADDRESS=0.0.0.0
       - REDIS_URL=redis://redis-3:6379
+      - RUST_LOG=info
     depends_on:
       - redis-3
   
