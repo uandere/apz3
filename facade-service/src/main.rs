@@ -4,6 +4,7 @@ use rocket::http::Status;
 use rocket::response::status;
 use rocket::serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+use rand::prelude::SliceRandom;
 
 #[derive(Debug, Deserialize)]
 struct Message {
@@ -22,11 +23,10 @@ struct AppState {
 
 #[post("/", format = "json", data = "<message>")]
 async fn index_post(message: Json<Message>, state: &State<AppState>) -> Result<String, status::Custom<String>> {
-    let selected_port = {
+    let selected_service = {
         let mut rng = state.rng.lock().unwrap();
-        let ports = [8001, 8002, 8003];
-        // Select a port and immediately release the lock by limiting the scope
-        ports[rng.gen_range(0..ports.len())]
+        let services = ["logging-service-1:8001", "logging-service-2:8001", "logging-service-3:8001"];
+        services[rng.gen_range(0..services.len())]
     };
 
     let client = reqwest::Client::new();
@@ -37,28 +37,40 @@ async fn index_post(message: Json<Message>, state: &State<AppState>) -> Result<S
         msg: message.msg.clone(),
     };
 
-    let res = client.post(format!("http://localhost:{}/log", selected_port))
+
+    let url = format!("http://{}/log", selected_service);
+    match client.post(&url)
         .json(&logged_message)
         .send()
-        .await;
-
-    match res {
-        Ok(_) => Ok(uuid.to_string()),
-        Err(_) => Err(status::Custom(Status::InternalServerError, "Failed to send message to logging-service".into())),
+        .await {
+        Ok(response) => {
+            if response.status().is_success() {
+                Ok(uuid.to_string())
+            } else {
+                // Log the error status and body for inspection
+                let status = response.status();
+                let error_body = response.text().await.unwrap_or_else(|_| "Failed to get error response body".to_string());
+                log::error!("Error sending message to logging-service: HTTP Status: {}, Body: {}", status, error_body);
+                Err(status::Custom(Status::InternalServerError, "Failed to send message to logging-service".into()))
+            }
+        },
+        Err(e) => {
+            log::error!("Request to logging-service failed: {}", e);
+            Err(status::Custom(Status::InternalServerError, "Failed to send message to logging-service".into()))
+        },
     }
 }
 
 #[get("/")]
 async fn index_get(state: &State<AppState>) -> Result<String, status::Custom<String>> {
-    let selected_port = {
+    let selected_service = {
         let mut rng = state.rng.lock().unwrap();
-        let ports = [8001, 8002, 8003];
-        // Select a port and immediately release the lock by limiting the scope
-        ports[rng.gen_range(0..ports.len())]
+        let services = ["logging-service-1:8001", "logging-service-2:8001", "logging-service-3:8001"];
+        services[rng.gen_range(0..services.len())]
     };
 
     let client = reqwest::Client::new();
-    let logging_service_response = client.get(format!("http://localhost:{}/logs", selected_port))
+    let logging_service_response = client.get(format!("http://{}/logs", selected_service))
         .send()
         .await;
 

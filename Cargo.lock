@@ -264,6 +264,7 @@ name = "facade-service"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
+ "log",
  "rand",
  "reqwest",
  "rocket",
