@@ -1,6 +1,64 @@
 version: '3.8'
 
 services:
+  redis-cluster-node-0:
+    image: redis:6.0-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "9079:6379"
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
+  redis-cluster-node-1:
+    image: redis:6.0-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "9080:6379"
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
+  redis-cluster-node-2:
+    image: redis:6.0-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "9081:6379"
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
+  redis-cluster-node-3:
+    image: redis:6.0-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "9082:6379"
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
+  redis-cluster-node-4:
+    image: redis:6.0-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "9083:6379"
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
+  redis-cluster-node-5:
+    image: redis:6.0-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "9084:6379"
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
+  redis-cluster-configure:
+    image: redis:6.0-alpine
+    command: sh /usr/local/etc/redis/redis-cluster-create.sh
+    depends_on:
+      - redis-cluster-node-0
+      - redis-cluster-node-1
+      - redis-cluster-node-2
+    volumes:
+      - ${PWD}/path/redis_conf_folder:/usr/local/etc/redis
+
   facade-service:
     build:
       context: .
@@ -21,16 +79,13 @@ services:
     environment:
       - ROCKET_PORT=8001
       - ROCKET_ADDRESS=0.0.0.0
-      - REDIS_URL=redis://redis-1:6379
+      - REDIS_URL0=redis://redis-cluster-node-0:6379
+      - REDIS_URL1=redis://redis-cluster-node-1:6379
+      - REDIS_URL2=redis://redis-cluster-node-2:6379
       - RUST_LOG=info
     depends_on:
-      - redis-1
-  
-  redis-1:
-    image: redis
-    ports:
-      - "63791:6379"
-  
+      - redis-cluster-configure
+
   logging-service-2:
     build:
       context: .
@@ -41,15 +96,12 @@ services:
     environment:
       - ROCKET_PORT=8001
       - ROCKET_ADDRESS=0.0.0.0
-      - REDIS_URL=redis://redis-2:6379
+      - REDIS_URL0=redis://redis-cluster-node-0:6379
+      - REDIS_URL1=redis://redis-cluster-node-1:6379
+      - REDIS_URL2=redis://redis-cluster-node-2:6379
       - RUST_LOG=info
     depends_on:
-      - redis-2
-  
-  redis-2:
-    image: redis
-    ports:
-      - "63792:6379"
+      - redis-cluster-configure
   
   logging-service-3:
     build:
@@ -61,15 +113,12 @@ services:
     environment:
       - ROCKET_PORT=8001
       - ROCKET_ADDRESS=0.0.0.0
-      - REDIS_URL=redis://redis-3:6379
+      - REDIS_URL0=redis://redis-cluster-node-0:6379
+      - REDIS_URL1=redis://redis-cluster-node-1:6379
+      - REDIS_URL2=redis://redis-cluster-node-2:6379
       - RUST_LOG=info
     depends_on:
-      - redis-3
-  
-  redis-3:
-    image: redis
-    ports:
-      - "63793:6379"
+      - redis-cluster-configure
   
   messages-service:
     build:
